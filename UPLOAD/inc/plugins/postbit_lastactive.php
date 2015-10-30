@@ -15,7 +15,7 @@ function postbit_lastactive_info()
     return array(
         "name"          => $db->escape_string($lang->pla_plugin_name),
         "description"   => $db->escape_string($lang->pla_plugin_desc),
-        "website"       => "https://github.com/SvePu/MyBB-Postbit-Lastactive",
+        "website"       => "https://github.com/SvePu/MyBB-Postbit-UserLastActiveTime",
         "author"        => "Svepu",
         "authorsite"    => "https://github.com/SvePu",
         "version"       => "1.0",
