@@ -18,7 +18,7 @@ function postbit_lastactive_info()
         "authorsite"    => "https://github.com/SvePu",
         "version"       => "0.9 BETA",
         "codename"      => "postbitlastactive",
-        "compatibility" => "*"
+        "compatibility" => "18*"
     );
 }
 
