@@ -1,9 +1,9 @@
 <?php
 /*
-*	Language admin file for Postbit Lastactive plugin for MyBB 1.8
+*	Language admin file for Postbit UserLastActiveTime plugin for MyBB 1.8
 *	Language: english
 *	Copyright © 2015 Svepu
-*	Last change: 2015-10-30
+*	Last change: 2015-10-31
 */
 
 $l['pla_plugin_name'] = 'User Last Active Time in Postbit';

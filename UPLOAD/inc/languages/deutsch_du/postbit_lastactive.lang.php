@@ -1,9 +1,9 @@
 <?php
 /*
 *	Language file for Postbit UserLastActiveTime plugin for MyBB 1.8
-*	Language: english
-*	Copyright © 2015 Svepu
+*	Language: deutsch_du
+*	Copyright Â© 2015 Svepu
 *	Last change: 2015-10-31
 */
 
-$l['pla_lastactive'] = 'Last active: {1}';
+$l['pla_lastactive'] = 'Zuletzt aktiv: {1}';
