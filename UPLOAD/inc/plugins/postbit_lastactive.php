@@ -13,6 +13,9 @@ if(!defined("IN_MYBB"))
 }
 
 $plugins->add_hook('postbit', 'postbit_lastactive_run');
+$plugins->add_hook('postbit_prev', 'postbit_lastactive_run');
+$plugins->add_hook('postbit_pm', 'postbit_lastactive_run');
+$plugins->add_hook('postbit_announcement', 'postbit_lastactive_run');
 
 function postbit_lastactive_info()
 {
@@ -102,8 +105,8 @@ function postbit_lastactive_activate()
 function postbit_lastactive_deactivate()
 {
 	require MYBB_ROOT."/inc/adminfunctions_templates.php";
-	find_replace_templatesets("postbit", "#\n".preg_quote('{$post[\'lastactive\']}')."(\r?)#", '', 0);
-	find_replace_templatesets("postbit_classic", "#\n".preg_quote('{$post[\'lastactive\']}')."(\r?)#", '', 0);
+	find_replace_templatesets("postbit", "#(\n?)".preg_quote('{$post[\'lastactive\']}')."(\r?)#", '', 0);
+	find_replace_templatesets("postbit_classic", "#(\n?)".preg_quote('{$post[\'lastactive\']}')."(\r?)#", '', 0);
 }
 
 function postbit_lastactive_uninstall()
