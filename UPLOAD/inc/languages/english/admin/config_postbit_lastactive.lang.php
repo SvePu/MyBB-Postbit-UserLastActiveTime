@@ -3,7 +3,7 @@
 *	Language admin file for Postbit UserLastActiveTime plugin for MyBB 1.8
 *	Language: english
 *	Copyright © 2015 Svepu
-*	Last change: 2015-10-31
+*	Last change: 2015-11-01
 */
 
 $l['pla_plugin_name'] = 'User Last Active Time in Postbit';
@@ -15,3 +15,6 @@ $l['pla_enable_title'] = 'Do you want enabe this feature?';
 $l['pla_enable_title_desc'] = 'Set YES to enable it!';
 $l['pla_groupselect_title'] = 'User groups which can see the last user active time in postbits.';
 $l['pla_groupselect_desc'] = 'Select usergroups.';
+$l['pla_timeformat_title'] = 'Date/Timeformat';
+$l['pla_timeformat_desc'] = 'Set the desired date and time format (For more informations visit <a href="http://php.net/manual/en/function.date.php" target="_blank">php.net</a>).';
+$l['pla_timeformat_default'] = 'Y-m-d, g:i a';

@@ -1,4 +1,10 @@
 <?php
+/*
+*	Main plugin file Postbit UserLastActiveTime plugin for MyBB 1.8
+*	
+*	Copyright © 2015 Svepu
+*	Last change: 2015-11-01
+*/
 
 // Disallow direct access to this file for security reasons
 if(!defined("IN_MYBB"))
@@ -18,7 +24,7 @@ function postbit_lastactive_info()
         "website"       => "https://github.com/SvePu/MyBB-Postbit-UserLastActiveTime",
         "author"        => "Svepu",
         "authorsite"    => "https://github.com/SvePu",
-        "version"       => "1.0",
+        "version"       => "1.1",
         "codename"      => "postbitlastactive",
         "compatibility" => "18*"
     );
@@ -65,6 +71,13 @@ function postbit_lastactive_install()
 			'optionscode'  	=> 'groupselect',
 			'value'        	=> '3,4,6',
 			"disporder"		=> 2
+		),
+		'postbit_lastactive_timeformat' => array(
+			'title'			=> $db->escape_string($lang->pla_timeformat_title),
+			'description' 	=> $db->escape_string($lang->pla_timeformat_desc),
+			'optionscode'  	=> 'text',
+			'value'        	=> $db->escape_string($lang->pla_timeformat_default),
+			"disporder"		=> 3
 		),
 	);
 
@@ -116,7 +129,11 @@ function postbit_lastactive_run(&$post)
 		$lang->load("postbit_lastactive");
 		if($post['lastvisit'] == $post['lastactive'] && $post['uid'] != 0 && (is_member($mybb->settings['postbit_lastactive_groupselect']) || $mybb->settings['postbit_lastactive_groupselect'] == "-1"))
 		{
-			$lastactivetime = my_date('relative', $post['lastactive']);
+			if(empty($mybb->settings['postbit_lastactive_timeformat']))
+			{
+				$mybb->settings['postbit_lastactive_timeformat'] = "relative";
+			}
+			$lastactivetime = my_date($mybb->settings['postbit_lastactive_timeformat'], $post['lastactive']);
 			$post['lastactive'] = '<br />'.$lang->sprintf($db->escape_string($lang->pla_lastactive), $lastactivetime);
 		}
 		else
