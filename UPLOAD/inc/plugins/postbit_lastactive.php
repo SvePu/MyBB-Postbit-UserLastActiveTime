@@ -1,10 +1,10 @@
 <?php
-/*
-*	Main plugin file Postbit UserLastActiveTime plugin for MyBB 1.8
-*	
-*	Copyright © 2015 Svepu
-*	Last change: 2015-11-01
-*/
+/**
+ *	Main plugin file Postbit UserLastActiveTime plugin for MyBB 1.8
+ *	
+ *	Copyright © 2015 Svepu
+ *	Last change: 2015-12-03
+ */
 
 // Disallow direct access to this file for security reasons
 if(!defined("IN_MYBB"))
@@ -27,7 +27,7 @@ function postbit_lastactive_info()
         "website"       => "https://github.com/SvePu/MyBB-Postbit-UserLastActiveTime",
         "author"        => "Svepu",
         "authorsite"    => "https://github.com/SvePu",
-        "version"       => "1.1",
+        "version"       => "1.2",
         "codename"      => "postbitlastactive",
         "compatibility" => "18*"
     );
@@ -37,7 +37,7 @@ function postbit_lastactive_is_installed()
 {
 	global $mybb;
 
-	if(isset($mybb->settings['postbit_lastactive_enable']))
+	if(isset($mybb->settings['pla_enable']))
 	{
 		return true;
 	}
@@ -52,7 +52,7 @@ function postbit_lastactive_install()
 	$query_add = $db->simple_select("settinggroups", "COUNT(*) as rows");
 	$rows = $db->fetch_field($query_add, "rows");
     $pla_setgroup = array(
-		"name" 			=>	"postbit_lastactive_settings",
+		"name" 			=>	"pla_settings",
 		"title" 		=>	$db->escape_string($lang->pla_settings_title),
 		"description" 	=>	$db->escape_string($lang->pla_settings_title_desc),
 		"disporder"		=> 	$rows+1,
@@ -61,26 +61,47 @@ function postbit_lastactive_install()
     $gid = $db->insert_query("settinggroups", $pla_setgroup);
 	
 	$setting_array = array(
-		'postbit_lastactive_enable' => array(
+		'pla_enable' => array(
 			'title'			=> $db->escape_string($lang->pla_enable_title),
 			'description'  	=> $db->escape_string($lang->pla_enable_title_desc),
 			'optionscode'  	=> 'yesno',
 			'value'        	=> 1,
 			'disporder'		=> 1
 		),
-		'postbit_lastactive_groupselect' => array(
+		'pla_groupselect' => array(
 			'title'			=> $db->escape_string($lang->pla_groupselect_title),
 			'description' 	=> $db->escape_string($lang->pla_groupselect_desc),
 			'optionscode'  	=> 'groupselect',
 			'value'        	=> '3,4,6',
 			"disporder"		=> 2
 		),
-		'postbit_lastactive_timeformat' => array(
+		'pla_timeformat' => array(
 			'title'			=> $db->escape_string($lang->pla_timeformat_title),
 			'description' 	=> $db->escape_string($lang->pla_timeformat_desc),
 			'optionscode'  	=> 'text',
 			'value'        	=> $db->escape_string($lang->pla_timeformat_default),
 			"disporder"		=> 3
+		),
+		'pla_showonlinestatus' => array(
+			'title'			=> $db->escape_string($lang->pla_showonlinestatus_title),
+			'description' 	=> $db->escape_string($lang->pla_showonlinestatus_desc),
+			'optionscode'  	=> 'yesno',
+			'value'        	=> 0,
+			"disporder"		=> 4
+		),
+		'pla_onlinestatus_text' => array(
+			'title'			=> $db->escape_string($lang->pla_onlinestatus_text_title),
+			'description' 	=> $db->escape_string($lang->pla_onlinestatus_text_desc),
+			'optionscode'  	=> 'text',
+			'value'        	=> 'Online',
+			"disporder"		=> 5
+		),
+		'pla_onlinestatus_style' => array(
+			'title'			=> $db->escape_string($lang->pla_onlinestatus_style_title),
+			'description' 	=> $db->escape_string($lang->pla_onlinestatus_style_desc),
+			'optionscode'  	=> 'textarea',
+			'value'        	=> 'color:green;\nfont-weight:bold;',
+			"disporder"		=> 6
 		),
 	);
 
@@ -97,23 +118,19 @@ function postbit_lastactive_install()
 
 function postbit_lastactive_activate()
 {
-	require MYBB_ROOT."/inc/adminfunctions_templates.php";
-	find_replace_templatesets("postbit", "#".preg_quote('{$post[\'user_details\']}')."#i", "{\$post['user_details']}\n{\$post['lastactive']}");
-	find_replace_templatesets("postbit_classic", "#".preg_quote('{$post[\'user_details\']}')."#i", "{\$post['user_details']}\n{\$post['lastactive']}");
+	
 }
 
 function postbit_lastactive_deactivate()
 {
-	require MYBB_ROOT."/inc/adminfunctions_templates.php";
-	find_replace_templatesets("postbit", "#(\n?)".preg_quote('{$post[\'lastactive\']}')."(\r?)#", '', 0);
-	find_replace_templatesets("postbit_classic", "#(\n?)".preg_quote('{$post[\'lastactive\']}')."(\r?)#", '', 0);
+	
 }
 
 function postbit_lastactive_uninstall()
 {
 	global $db;
 	
-	$result = $db->simple_select('settinggroups', 'gid', "name = 'postbit_lastactive_settings'", array('limit' => 1));
+	$result = $db->simple_select('settinggroups', 'gid', "name = 'pla_settings'", array('limit' => 1));
 	$pla_group = $db->fetch_array($result);
 	
 	if(!empty($pla_group['gid']))
@@ -127,25 +144,35 @@ function postbit_lastactive_uninstall()
 function postbit_lastactive_run(&$post)
 {	
 	global $db, $lang, $mybb;
-	if($mybb->settings['postbit_lastactive_enable'] == "1" && !empty($mybb->settings['postbit_lastactive_groupselect']))
-	{
+	if($mybb->settings['pla_enable'] == "1" && !empty($mybb->settings['pla_groupselect']) && $post['uid'] != 0)
+	{		
 		$lang->load("postbit_lastactive");
-		if($post['lastvisit'] == $post['lastactive'] && $post['uid'] != 0 && (is_member($mybb->settings['postbit_lastactive_groupselect']) || $mybb->settings['postbit_lastactive_groupselect'] == "-1"))
+		if($post['lastvisit'] == $post['lastactive'] && (is_member($mybb->settings['pla_groupselect']) || $mybb->settings['pla_groupselect'] == "-1"))
 		{
-			if(empty($mybb->settings['postbit_lastactive_timeformat']))
+			if(empty($mybb->settings['pla_timeformat']))
 			{
-				$mybb->settings['postbit_lastactive_timeformat'] = "relative";
+				$mybb->settings['pla_timeformat'] = "relative";
 			}
-			$lastactivetime = my_date($mybb->settings['postbit_lastactive_timeformat'], $post['lastactive']);
-			$post['lastactive'] = '<br />'.$lang->sprintf($db->escape_string($lang->pla_lastactive), $lastactivetime);
+			$lastactivetime = my_date($mybb->settings['pla_timeformat'], $post['lastactive']);
+			$postlastactive = '<br />'.$lang->sprintf($db->escape_string($lang->pla_lastactive), $lastactivetime);
+		}
+		elseif($post['lastvisit'] != $post['lastactive'] && (is_member($mybb->settings['pla_groupselect']) || $mybb->settings['pla_groupselect'] == "-1") && $mybb->settings['pla_showonlinestatus'] == "1")
+		{
+			$onlinetextstring = empty($mybb->settings['pla_onlinestatus_text']) ? 'Online' : $mybb->settings['pla_onlinestatus_text'];
+			$onlinecssstyle = '';
+			if(!empty($mybb->settings['pla_onlinestatus_style']))
+			{
+				$onlinecssstylesheet = preg_replace("%(\r\n)|(\r)%", "", $mybb->settings['pla_onlinestatus_style']);
+				$onlinecssstyle = 'style="'.$onlinecssstylesheet.'"';
+			}			
+			$postlastactive = '<br /><span '.$onlinecssstyle.'>'.$onlinetextstring.'</span>';
 		}
 		else
 		{
-			$post['lastactive'] = '';
+			$postlastactive = '';
 		}
+		
+		$post['user_details'] = $post['user_details'].$postlastactive;
 	}
-	else
-	{
-		$post['lastactive'] = '';
-	}
+	return $post;
 }
