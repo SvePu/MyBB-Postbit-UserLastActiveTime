@@ -42,33 +42,25 @@ function postbit_lastactive_info()
         "compatibility" => "18*"
     );
 
-    $info_desc = '';
-    $gid_result = $db->simple_select('settinggroups', 'gid', "name = 'postbitlastactive'", array('limit' => 1));
-    $settings_group = $db->fetch_array($gid_result);
-    if (!empty($settings_group['gid']))
+    if (is_array($plugins_cache) && is_array($plugins_cache['active']) && array_key_exists('postbit_lastactive', $plugins_cache['active']))
     {
-        $info_desc .= "<span style=\"font-size: 0.9em;\">(~<a href=\"index.php?module=config-settings&action=change&gid=" . $settings_group['gid'] . "\"> " . htmlspecialchars_uni($lang->setting_group_postbitlastactive) . " </a>~)</span>";
-    }
+        $query = $db->simple_select('settinggroups', 'gid', "name = 'postbitlastactive'", array('limit' => 1));
+        $settings_group = (int)$db->fetch_field($query, 'gid');
+        if ($settings_group)
+        {
+            if (!isset($lang->plugin_settings))
+            {
+                $lang->load("config_settings");
+            }
 
-    if (is_array($plugins_cache) && is_array($plugins_cache['active']) && $plugins_cache['active']['postbit_lastactive'])
-    {
-        $info_desc .= '<form action="https://www.paypal.com/cgi-bin/webscr" method="post" style="float: right;" target="_blank" />
-<input type="hidden" name="cmd" value="_s-xclick" />
-<input type="hidden" name="hosted_button_id" value="VGQ4ZDT8M7WS2" />
-<input type="image" src="https://www.paypalobjects.com/webstatic/en_US/btn/btn_donate_pp_142x27.png" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!" />
-<img alt="" border="0" src="https://www.paypalobjects.com/de_DE/i/scr/pixel.gif" width="1" height="1" />
-</form>';
-    }
-
-    if ($info_desc != '')
-    {
-        $info['description'] = $info_desc . '<br />' . $info['description'];
+            $info['description'] .=  "<br /><span style=\"line-height: 2.5em;display: inline-block;font-weight: 600;font-style: italic;\"><a href=\"index.php?module=config-settings&amp;action=change&amp;gid=" . $settings_group . "\"><img style=\"vertical-align: sub;\" src=\"./styles/default/images/icons/custom.png\" title=\"" . $db->escape_string($lang->plugin_settings) . "\" alt=\"settings_icon\" width=\"16\" height=\"16\" />&nbsp;" . $db->escape_string($lang->plugin_settings) . "</a></span>";
+        }
     }
 
     return $info;
 }
 
-function postbit_lastactive_activate()
+function postbit_lastactive_install()
 {
     global $db, $mybb, $lang;
 
@@ -106,7 +98,7 @@ function postbit_lastactive_activate()
             'value'         => 1
         ),
         'onlinecutofftime' => array(
-            'optionscode'   => 'numeric',
+            'optionscode'   => 'numeric \nmin=1',
             'value'         => 5
         ),
         'onlinestatus_text' => array(
@@ -142,7 +134,17 @@ function postbit_lastactive_activate()
     rebuild_settings();
 }
 
-function postbit_lastactive_deactivate()
+function postbit_lastactive_is_installed()
+{
+    global $mybb;
+    if (isset($mybb->settings['postbitlastactive_enable']))
+    {
+        return true;
+    }
+    return false;
+}
+
+function postbit_lastactive_uninstall()
 {
     global $db;
 
@@ -171,10 +173,6 @@ function postbit_lastactive_run(&$post)
     {
         if ($mybb->settings['postbitlastactive_showonlinestatus'] == 1 && $post['lastvisit'] != $post['lastactive'])
         {
-            if ($mybb->settings['postbitlastactive_onlinecutofftime'] < 1)
-            {
-                $mybb->settings['postbitlastactive_onlinecutofftime'] = 1;
-            }
             $cutofftime = $mybb->settings['postbitlastactive_onlinecutofftime'] * 60;
 
             if ($post['lastactive'] > TIME_NOW - $cutofftime)
@@ -214,7 +212,10 @@ function postbit_lastactive_run(&$post)
         }
     }
 
-    $post['user_details'] = $post['user_details'] . $post['last_active_info'];
+    if (!empty($post['last_active_info']))
+    {
+        $post['user_details'] .= $post['last_active_info'];
+    }
 }
 
 function postbit_lastactive_settings()
